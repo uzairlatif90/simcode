@@ -692,6 +692,18 @@ Double_t* MRootScript_v2(Double_t c1,Double_t c2,Double_t c3,Double_t r1,Double_
       R_ang=-1;
       WasSurfaceHit=surfhit;
       
+      output[0]=L_ang;
+      output[1]=R_ang;
+      output[2]=TransitTime;      
+      
+      output[3]=L_ang;
+      output[4]=R_ang;
+      output[5]=TransitTime;      
+      
+      output[6]=L_ang;
+      output[7]=R_ang;
+      output[8]=TransitTime;      
+      
       chTreeR->Fill();
     }
     
