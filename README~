@@ -10,21 +10,21 @@ Last argument "wsol" is what type of solution do you want:
 
   //Find Direct Solutions
   wsol==0
-
+  
   //Find Reflected Solutions
   wsol==1
 
   //Find Refracted Solutions
   wsol==2
   
-//Find Direct & Reflected Solutions
+  //Find Direct & Reflected Solutions
   wsol==3
 
-   //Find Refracted & Reflected Solutions
+  //Find Refracted & Reflected Solutions
   wsol==4
 
-   //Find Direct,Refracted & Reflected Solutions
-   wsol==5
+  //Find Direct,Refracted & Reflected Solutions
+  wsol==5
 
 
 The code returns you back a pointer to an array which you can use to get the Launch, Recieve and time (in seconds) of the ray. For example:

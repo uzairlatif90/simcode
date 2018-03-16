@@ -9,93 +9,59 @@
 #include "TAxis.h"
 #include "TFile.h"
 #include "TTree.h"
- 
-const Double_t pi=4.0*atan(1.0);
-const Double_t spedc=299792458.0;
 
-Double_t h=0.001;
-const Double_t tmax=6000.0;
+const Double_t pi=4.0*atan(1.0); /**< Gives back value of Pi */
 
-// const Double_t A=1.788;
-// const Double_t B=-0.463;
-// const Double_t C=0.014;//// no negative sign for negative depth
+const Double_t spedc=299792458.0; /**< Speed of Light in m/s */
 
-const Double_t A=1.78;
-const Double_t B=-0.43;
-const Double_t C=0.0132;//// no negative sign for negative depth
+Double_t h=0.001; /**< RK4 step size is set to 1mm */
 
-Double_t n(Double_t z){
-  return A+B*exp(C*z);
-}
+const Double_t tmax=6000.0; /**< Total "time" Rk4 will run for. In this case it is total meters before the RK4 loop stops  */
 
-Double_t dndz(Double_t z){
-  return B*C*exp(C*z);
-}
-  
-Double_t fx(Double_t theta){
-  return sin(theta);
-}
+const Double_t A=1.78;/**< Value of Parameter A for SP model of refractive index */
+const Double_t B=-0.43; /**< Value of Parameter B for SP model of refractive index */
+const Double_t C=0.0132;/**< Value of Parameter A for SP model of refractive index. There will be no negative sign for negative depth. */ 
 
-Double_t fz(Double_t theta){  
-  return cos(theta);
-}
+/*! \brief Takes in values of A,B & C and the depth z and returns value for refrative index model n(z).
+ *
+ */
+Double_t n(Double_t z);
 
-Double_t ftheta(Double_t theta, Double_t z){  
-  return -sin(theta)*(1.0/n(z))*dndz(z);
-}
+/*! \brief Takes in values of A,B & C and the depth z and returns value for the first derivative of refrative index model.
+ *
+ */
+Double_t dndz(Double_t z);
 
-Double_t temperature(Double_t z){
-	return(-51.5 + z*(-4.5319e-3 + 5.822e-6*z));
-}
+/*! \brief Takes in value of theta (angle w.r.t to the vertical) and returns the value of sin(theta). This is used in the RK4 calculations.
+ *
+ */
+Double_t fx(Double_t theta);
 
-Double_t Latten(Double_t z, Double_t frequency){
-  //	if(z>0.0)		return(std::numeric_limits<Double_t>::infinity());
-  Double_t t = temperature(z);
-  const Double_t f0=0.0001, f2=3.16;
-  const Double_t w0=log(f0), w1=0.0, w2=log(f2), w=log(frequency);
-  const Double_t b0=-6.74890+t*(0.026709-t*0.000884);
-  const Double_t b1=-6.22121-t*(0.070927+t*0.001773);
-  const Double_t b2=-4.09468-t*(0.002213+t*0.000332);
-  Double_t a,bb;
-  if(frequency<1.){
-    a=(b1*w0-b0*w1)/(w0-w1);
-    bb=(b1-b0)/(w1-w0);
-  }
-  else{
-    a=(b2*w1-b1*w2)/(w1-w2);
-    bb=(b2-b1)/(w2-w1);
-  }
-  return 1./exp(a+bb*w);
-}
+/*! \brief Takes in value of theta (angle w.r.t to the vertical) and returns the value of cos(theta). This is used in the RK4 calculations.
+ *
+ */
+Double_t fz(Double_t theta);
 
-Double_t ftau(Double_t tau,Double_t z){  
-  // Double_t Latten=1000;
-  Double_t Lavg=0;
-  Int_t frband=floor((0.8-0.2)/0.1);
-  Double_t step=0.2;
-  for(Int_t i=0;i<frband;i++){
-    Lavg+=Latten(z,step);
-    step=step+0.1;
-  }
-  Lavg=Lavg/(Double_t)frband;
-  return tau/Lavg;
-}
+/*! \brief Takes in value of theta (angle w.r.t to the vertical), n(z) and dndz(z) and returns the value of theta. This is used in the RK4 calculations.
+ *
+ */
+Double_t ftheta(Double_t theta, Double_t z);
 
-// Double_t ftau(Double_t tau){  
-//   Double_t Latten=1000;
-//   return tau/Latten;
-// }
+/*! \brief Takes in value of depth z and returns the value of temperature. This is used in the RK4 calculations.
+ *
+ *http://icecube.wisc.edu/~mnewcomb/radio/atten/
+ *http://icecube.wisc.edu/~mnewcomb/radio/
+ */
+Double_t temperature(Double_t z);
+Double_t Latten(Double_t z, Double_t frequency);
+Double_t ftau(Double_t tau,Double_t z);
+Double_t ftime(Double_t z);
 
-Double_t ftime(Double_t z){  
-  return n(z)/spedc;
-}
-
-Double_t *getlaunchangle(Double_t src, Double_t rec, Double_t x0, Double_t x1);
-Double_t *getStartAngles(Double_t z0, Double_t x0, Double_t x1, Double_t z1, Int_t solnum);
+Double_t *getDirAng(Double_t x0,Double_t z0, Double_t x1, Double_t z1);
+Double_t *getStartAngles(Double_t x0, Double_t z0, Double_t x1, Double_t z1, Int_t solnum);
 Double_t *getAngleCorrections(Int_t num, Int_t antco, Int_t D56co,Double_t test0, Double_t test1, Int_t psns,Int_t in,Int_t solnum);
-Double_t getReflAng(Double_t z0, Double_t x0, Double_t x1, Double_t z1);
+Double_t getReflAng(Double_t x0, Double_t z0, Double_t x1, Double_t z1);
 
-//void MRootScript_v2(Double_t c1,Double_t c2,Double_t c3,Double_t r1,Double_t r2,Double_t r3,string outFilename1){
 Double_t* MRootScript_v2(Double_t c1,Double_t c2,Double_t c3,Double_t r1,Double_t r2,Double_t r3,Int_t wsol){
 
   Double_t *output=new Double_t[9];
@@ -283,7 +249,7 @@ Double_t* MRootScript_v2(Double_t c1,Double_t c2,Double_t c3,Double_t r1,Double_
       z1=z0d;
       x0=0;
       if(ndhit==0 && i==0){
-	Double_t *infir=getStartAngles(z0,x0,x1,z1,isol);
+	Double_t *infir=getStartAngles(x0,z0,x1,z1,isol);
 	testfir[0]=infir[0];
 	testfir[1]=infir[1];
 	cout<<"START angles "<<testfir[0]*(180/pi)<<" "<<testfir[1]*(180/pi)<<endl;
@@ -714,27 +680,88 @@ Double_t* MRootScript_v2(Double_t c1,Double_t c2,Double_t c3,Double_t r1,Double_
   return output;
 }
 
+Double_t n(Double_t z){
+  return A+B*exp(C*z);
+}
 
-Double_t *getlaunchangle(Double_t src, Double_t rec, Double_t x0, Double_t x1){
+Double_t dndz(Double_t z){
+  return B*C*exp(C*z);
+}
+  
+Double_t fx(Double_t theta){
+  return sin(theta);
+}
+
+Double_t fz(Double_t theta){  
+  return cos(theta);
+}
+
+Double_t ftheta(Double_t theta, Double_t z){  
+  return -sin(theta)*(1.0/n(z))*dndz(z);
+}
+
+Double_t temperature(Double_t z){
+	return(-51.5 + z*(-4.5319e-3 + 5.822e-6*z));
+}
+
+Double_t Latten(Double_t z, Double_t frequency){
+  //	if(z>0.0)		return(std::numeric_limits<Double_t>::infinity());
+  Double_t t = temperature(z);
+  const Double_t f0=0.0001, f2=3.16;
+  const Double_t w0=log(f0), w1=0.0, w2=log(f2), w=log(frequency);
+  const Double_t b0=-6.74890+t*(0.026709-t*0.000884);
+  const Double_t b1=-6.22121-t*(0.070927+t*0.001773);
+  const Double_t b2=-4.09468-t*(0.002213+t*0.000332);
+  Double_t a,bb;
+  if(frequency<1.){
+    a=(b1*w0-b0*w1)/(w0-w1);
+    bb=(b1-b0)/(w1-w0);
+  }
+  else{
+    a=(b2*w1-b1*w2)/(w1-w2);
+    bb=(b2-b1)/(w2-w1);
+  }
+  return 1./exp(a+bb*w);
+}
+
+Double_t ftau(Double_t tau,Double_t z){  
+  // Double_t Latten=1000;
+  Double_t Lavg=0;
+  Int_t frband=floor((0.8-0.2)/0.1);
+  Double_t step=0.2;
+  for(Int_t i=0;i<frband;i++){
+    Lavg+=Latten(z,step);
+    step=step+0.1;
+  }
+  Lavg=Lavg/(Double_t)frband;
+  return tau/Lavg;
+}
+
+Double_t ftime(Double_t z){  
+  return n(z)/spedc;
+}
+
+
+Double_t *getDirAng(Double_t x0,Double_t z0, Double_t x1, Double_t z1){
 
   // Double_t A=1.788;
   // Double_t B=-0.463;
   // Double_t C=0.014;//// no negative sign for negative depth
   // Double_t pi=4.0*atan(1.0);//// no negative sign for negative depth
   
-  // Double_t src=0;
-  // Double_t rec=-180;
-  Double_t n0=A+B*exp(C*src);
-  Double_t n=A+B*exp(C*rec);
+  // Double_t z0=0;
+  // Double_t z1=-180;
+  Double_t n0=A+B*exp(C*z0);
+  Double_t n=A+B*exp(C*z1);
   // Double_t x0=0;
   // Double_t x1=10;
   Bool_t swapbool=(n<n0);
   if(swapbool) {
     //swap(n,n0);
-    n=A+B*exp(C*src);
-    n0=A+B*exp(C*rec);
+    n=A+B*exp(C*z0);
+    n0=A+B*exp(C*z1);
     cout<<"SWAP"<<endl;
-    //std::cout<<"swap!"<<std::endl; // changed (so that src is always near surface?)
+    //std::cout<<"swap!"<<std::endl; // changed (so that z0 is always near surface?)
   }
   
   Double_t sDiff=C*fabs(x0-x1);
@@ -812,13 +839,13 @@ Double_t *getlaunchangle(Double_t src, Double_t rec, Double_t x0, Double_t x1){
     th0p[1]=0;
   }
 
-  // cout<<"z0 "<<src<<" , x0 "<<x0<<", z "<<rec<<" , x1 "<<x1<<" "<<th0p[0]*(180/pi)<<" "<<th0p[1]*(180/pi)<<" launch output"<<endl;
+  // cout<<"z0 "<<z0<<" , x0 "<<x0<<", z "<<z1<<" , x1 "<<x1<<" "<<th0p[0]*(180/pi)<<" "<<th0p[1]*(180/pi)<<" launch output"<<endl;
   return th0p;
   
 }
 
 
-Double_t *getStartAngles(Double_t z0, Double_t x0, Double_t x1, Double_t z1, Int_t solnum){
+Double_t *getStartAngles(Double_t x0, Double_t z0, Double_t x1, Double_t z1, Int_t solnum){
   
   Double_t midang=0;
   Double_t *outfir=new Double_t[2];
@@ -827,7 +854,7 @@ Double_t *getStartAngles(Double_t z0, Double_t x0, Double_t x1, Double_t z1, Int
   
   if(solnum==1 || solnum==2){
 
-    midang=getReflAng(z0,x0,x1,z1);
+    midang=getReflAng(x0,z0,x1,z1);
 
     if(solnum==2 && midang!=0){
       midang=midang+15*(pi/180.0);
@@ -862,7 +889,7 @@ Double_t *getStartAngles(Double_t z0, Double_t x0, Double_t x1, Double_t z1, Int
   
   if(solnum==0){
     
-    Double_t *ang2=getlaunchangle(z0,z1,x0,x1);
+    Double_t *ang2=getDirAng(x0,z0,x1,z1);
     midang=ang2[1];
     
     if(z0<z1){
@@ -947,7 +974,7 @@ Double_t *getAngleCorrections(Int_t num, Int_t antco, Int_t D56co,Double_t test0
   return outfir2;
 }
 
-Double_t getReflAng(Double_t z0, Double_t x0, Double_t x1, Double_t z1){
+Double_t getReflAng(Double_t x0, Double_t z0, Double_t x1, Double_t z1){
   // Double_t x0=0;
   // Double_t x1=150;
 
